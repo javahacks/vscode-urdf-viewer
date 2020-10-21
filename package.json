@@ -1,0 +1,89 @@
+{
+  "name": "urdf-viewer",
+  "publisher": "javahacks",
+  "displayName": "urdf-viewer",
+  "description": "",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.49.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:urdf.openPreview",
+    "onWebviewPanel:urdf.preview"
+  ],
+  "main": "./out/extension/extension.js",
+  "contributes": {
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "urdf.openPreview",
+          "when": "editorLangId == xml"
+        }
+      ],
+      "editor/title": [
+        {
+          "when": "editorLangId == xml ",
+          "command": "urdf.openPreview",
+          "group": "navigation"
+        },
+        {
+          "when": "urdf:contextActive == true",
+          "command": "urdf.resetView",
+          "group": "navigation"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "urdf.openPreview",
+        "title": "Open Robot Preview",
+        "icon": "resources/robot-arm.svg"        
+      },
+      {
+        "command": "urdf.resetView",
+        "title": "Reset Preview",
+        "icon": "$(refresh)"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile && npm run compile-viewer",
+    "compile-viewer": "webpack --mode=production --config ./src/urdf-renderer/webpack.config.js",
+    "compile-viewer-watch": "webpack --watch --config ./src/urdf-renderer/webpack.config.js",
+    "compile": "tsc -p .  && npm run compile-viewer",
+    "lint": "eslint src --ext ts",
+    "prettier-format": "prettier --config .prettierrc 'src/**/*.ts' --write",
+    "watch": "tsc -watch -p .",
+    "pretest": "npm run compile && npm run lint",
+    "test": "node ./out/extension/test/runTest.js"
+  },
+  "devDependencies": {
+    "@babylonjs/core": "^4.1.0",
+    "@babylonjs/gui": "^4.1.0",
+    "@babylonjs/loaders": "^4.1.0",
+    "@babylonjs/materials": "^4.1.0",
+    "@types/glob": "^7.1.3",
+    "@types/mocha": "^8.0.0",
+    "@types/node": "^14.0.27",
+    "@types/vscode": "^1.49.0",
+    "@typescript-eslint/eslint-plugin": "^4.1.1",
+    "@typescript-eslint/parser": "^4.1.1",
+    "eslint": "^7.9.0",
+    "glob": "^7.1.6",
+    "mocha": "^8.1.3",
+    "prettier": "^2.1.2",
+    "ts-loader": "^8.0.4",
+    "typescript": "^4.0.3",
+    "vscode-test": "^1.4.0",
+    "webpack": "^4.44.2",
+    "webpack-cli": "^3.3.12",
+    "webpack-dev-server": "^3.11.0"
+  },
+  "dependencies": {
+    "@types/xml2js": "^0.4.5",
+    "xml2js": "^0.4.23"
+  }
+}
