@@ -83,21 +83,20 @@ export class URDFRenderer {
   }
 
   public resetModel() {
-    this.idMeshMap.forEach(value => value.dispose());
-    this.idMaterialMap.forEach(value => value.dispose());
+    this.idMeshMap.forEach((value) => value.dispose());
+    this.idMaterialMap.forEach((value) => value.dispose());
     this.menuPanel.clearControls();
     this.idMeshMap.clear();
-    this.idMaterialMap.clear();    
+    this.idMaterialMap.clear();
   }
 
-  highlightMesh(meshId: string) {          
-      const reset=!this.idMeshMap.has(meshId);  
-      this.idMeshMap.forEach((mesh: AbstractMesh, id: string) => {
-        if (mesh.material) {          
-          mesh.material.alpha = reset || meshId=== id ? 1.0 : 0.4;
-        }
-      });
-    
+  highlightMesh(meshId: string) {
+    const reset = !this.idMeshMap.has(meshId);
+    this.idMeshMap.forEach((mesh: AbstractMesh, id: string) => {
+      if (mesh.material) {
+        mesh.material.alpha = reset || meshId === id ? 1.0 : 0.4;
+      }
+    });
   }
 
   public resetView() {
@@ -106,12 +105,12 @@ export class URDFRenderer {
     camera.beta = Math.PI / 4;
     camera.setTarget(BABYLON.Vector3.Zero());
   }
-  
-  public initRobotModel(robot: Robot) {  
+
+  public initRobotModel(robot: Robot) {
     this.initMaterials(robot);
     this.initLinks(robot);
     this.loadMeshes(robot);
-    this.idMaterialMap.forEach(material => material.dispose());
+    this.idMaterialMap.forEach((material) => material.dispose());
   }
 
   private initLinks(robot: Robot) {
@@ -180,17 +179,17 @@ export class URDFRenderer {
     const assetsManager = new BABYLON.AssetsManager(this.scene);
     assetsManager.useDefaultLoadingScreen = false;
     const loadedMeshes: AbstractMesh[] = [];
-    
+
     for (const link of robot.link) {
       if (link.visual?.geometry?.mesh?.filename) {
         this.addMeshTask(link, assetsManager, loadedMeshes);
       }
     }
-    
-    this.updateCycle ++;
+
+    this.updateCycle++;
     const currentCycle = this.updateCycle;
-    
-    assetsManager.onFinish = tasks => {      
+
+    assetsManager.onFinish = (tasks) => {
       if (currentCycle === this.updateCycle) {
         this.connectMeshes(robot);
       } else {
@@ -302,8 +301,17 @@ export class URDFRenderer {
         );
       }
 
-      if (joint.type === 'revolute' || joint.type === 'continuous') {
-        this.addControlForRevoluteJoint(joint, transform);
+      if (joint.type === 'continuous') {
+        //not really continous but full clock- and counterclockwise rotation
+        joint.limit = {
+          lower: (-Math.PI * 2).toString(),
+          upper: (Math.PI * 2).toString()
+        };
+        this.addJointControl(joint, transform);
+      }
+
+      if (joint.type === 'revolute') {
+        this.addJointControl(joint, transform);
       }
 
       const parent = this.idMeshMap.get(joint.parent.link);
@@ -314,15 +322,9 @@ export class URDFRenderer {
       }
     }
   }
-  private addControlForRevoluteJoint(joint: Joint, transform: TransformNode) {
-    const lowerLimit =
-      joint.type === 'continuous'
-        ? Math.PI / 2
-        : Number.parseFloat(joint.limit?.lower);
-    const upperLimit =
-      joint.type === 'continuous'
-        ? Math.PI / 2
-        : Number.parseFloat(joint.limit?.upper);
+  private addJointControl(joint: Joint, transform: TransformNode) {
+    const lowerLimit = Number.parseFloat(joint.limit?.lower);
+    const upperLimit = Number.parseFloat(joint.limit?.upper);
 
     if (lowerLimit === 0 && upperLimit === 0) {
       return;
