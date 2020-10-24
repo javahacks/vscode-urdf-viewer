@@ -43,13 +43,7 @@ export class PreviewPanel {
     this.panel.webview.html = this.getWebviewContent();
     this.panel.onDidDispose(() => this.dispose());
     this.disposables.push(
-      this.panel.onDidChangeViewState((e) =>
-        vscode.commands.executeCommand(
-          'setContext',
-          'urdf:contextActive',
-          e.webviewPanel.active
-        )
-      )
+      this.panel.onDidChangeViewState((e) => this.updateContext())
     );
 
     this.disposables.push(
@@ -68,6 +62,16 @@ export class PreviewPanel {
         this.selectionChanged()
       )
     );
+
+    this.updateContext();
+  }
+
+  private updateContext(): any {
+    return vscode.commands.executeCommand(
+      'setContext',
+      'urdf:contextActive',
+      this.panel.active
+    );
   }
 
   private async setActiveEditorContent() {
@@ -80,40 +84,37 @@ export class PreviewPanel {
   private selectionChanged() {
     const document = vscode.window.activeTextEditor?.document;
     const selection = vscode.window.activeTextEditor?.selection;
-    
-    if (selection && document && this.canHandleDocument(document)) {            
-      this.panel.webview.postMessage({ highlightMeshId: [this.resolveSelectedMeshId(document, selection)] });
+
+    if (selection && document && this.canHandleDocument(document)) {
+      this.panel.webview.postMessage({
+        highlightMeshId: [this.resolveSelectedMeshId(document, selection)]
+      });
     }
   }
 
-  private resolveSelectedMeshId(document: vscode.TextDocument, selection: vscode.Selection) {
+  private resolveSelectedMeshId(
+    document: vscode.TextDocument,
+    selection: vscode.Selection
+  ) {
+    const idPattern = /name\s*=\s*\"([^\"]+)\"/;
     const wordRange = document.getWordRangeAtPosition(
       selection.start,
-      /\"[^\"]+\"/
+      idPattern
     );
     if (wordRange) {
-      const start = wordRange.start;
-      const end = wordRange.end;
-      const text = document.getText(
-        new vscode.Range(
-          start.line,
-          start.character + 1,
-          end.line,
-          end.character - 1
-        )
-      );
-      return text;
-    }    
+      const wordRangeText = document.getText(wordRange);
+      return wordRangeText.match(idPattern)[1];
+    }
   }
 
   private async loadModel(document: vscode.TextDocument) {
     try {
-      const result = (await xmljs.parseStringPromise(document.getText(), {
+      const model = (await xmljs.parseStringPromise(document.getText(), {
         mergeAttrs: true,
         explicitArray: false
       })) as ViewerModel;
-      this.prepareRobotModel(result, document.uri);
-      return result;
+      this.prepareRobotModel(model, document.uri);
+      return model;
     } catch (e) {
       console.log('could not parse model', e);
       return {};
@@ -124,12 +125,12 @@ export class PreviewPanel {
     const workspaceUri = vscode.workspace.getWorkspaceFolder(documentUri).uri;
 
     patchUrlsAndArrays(model.robot, (oldFileName) =>
-      this.panel.webview
+      this.panel?.webview
         .asWebviewUri(
-          vscode.Uri.joinPath(
-            workspaceUri,
-            oldFileName.replace('package://', '')
-          )
+          workspaceUri.with({
+            path:
+              workspaceUri.path + '/' + oldFileName.replace('package://', '')
+          })
         )
         .toString()
     );
@@ -144,7 +145,7 @@ export class PreviewPanel {
   }
 
   canHandleDocument(document: vscode.TextDocument): boolean {
-    const fileExtension = document?.fileName?.split('.').pop().toLowerCase();    
+    const fileExtension = document?.fileName?.split('.').pop().toLowerCase();
     return (
       this.fileExtensions.has(fileExtension) &&
       document.getText().match(/.*<\s*robot.*>/) !== null
@@ -152,10 +153,8 @@ export class PreviewPanel {
   }
 
   private getWebviewContent() {
-    const scriptPathOnDisk = vscode.Uri.joinPath(
-      this.context.extensionUri,
-      'resources',
-      'viewer.js'
+    const scriptPathOnDisk = vscode.Uri.parse(
+      this.context.extensionPath.toString() + '/resources/viewer.js'
     );
 
     const scriptUri = this.panel.webview.asWebviewUri(scriptPathOnDisk);
