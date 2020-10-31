@@ -48,12 +48,15 @@
       {
         "command": "urdf.openPreview",
         "title": "Open Robot Preview",
-        "icon": "resources/robot-arm.svg"        
+        "icon": "./resources/robot-arm.svg"                
       },
       {
         "command": "urdf.resetView",
-        "title": "Reset Preview",
-        "icon": "$(refresh)"
+        "title": "Reset Preview",        
+        "icon": {
+          "light": "./resources/light/refresh.svg" ,
+          "dark": "./resources/dark/refresh.svg" 
+        }
       }
     ],
     "keybindings": [
