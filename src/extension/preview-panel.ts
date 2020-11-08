@@ -152,11 +152,9 @@ export class PreviewPanel {
     );
   }
 
-  private getWebviewContent() {
-    const scriptPathOnDisk = vscode.Uri.parse(
-      this.context.extensionPath.toString() + '/resources/viewer.js'
-    );
-
+  private getWebviewContent() {        
+    //THEIA TBD: ExtensionContext.extensionUri() or Uri.joinPath() are not supported in Theia 
+    const scriptPathOnDisk =  vscode.Uri.file(this.context.extensionPath+"/resources/viewer.js");  
     const scriptUri = this.panel.webview.asWebviewUri(scriptPathOnDisk);
 
     return `<!DOCTYPE html>

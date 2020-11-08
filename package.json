@@ -1,15 +1,17 @@
 {
   "name": "urdf-viewer",
   "publisher": "javahacks",
-  "displayName": "urdf-viewer",
-  "description": "",
+  "displayName": "URDF Viewer",
+  "description": "Preview for URDF models",
   "version": "1.0.0",
-  "repository": {"url": "https://github.com/javahacks/vscode-urdf-viewer"},
+  "repository": {
+    "url": "https://github.com/javahacks/vscode-urdf-viewer"
+  },
   "engines": {
     "vscode": "^1.49.0"
   },
   "categories": [
-    "Other"
+    "Visualization"
   ],
   "activationEvents": [
     "onCommand:urdf.openPreview",
@@ -41,21 +43,21 @@
           "when": "editorLangId == xml",
           "command": "urdf.openPreview",
           "group": "navigation"
-        }        
+        }
       ]
     },
     "commands": [
       {
         "command": "urdf.openPreview",
         "title": "Open Robot Preview",
-        "icon": "./resources/robot-arm.svg"                
+        "icon": "./resources/robot-arm.svg"
       },
       {
         "command": "urdf.resetView",
-        "title": "Reset Preview",        
+        "title": "Reset Preview",
         "icon": {
-          "light": "./resources/light/refresh.svg" ,
-          "dark": "./resources/dark/refresh.svg" 
+          "light": "./resources/light/refresh.svg",
+          "dark": "./resources/dark/refresh.svg"
         }
       }
     ],
